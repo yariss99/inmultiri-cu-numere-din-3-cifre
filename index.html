@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ro"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fișă interactivă – Înmulțirea cu numere de trei cifre</title>
+<style>
+:root{--bg:#fbf7fa;--card:#fff;--ink:#2a1b27;--mut:#7d6677;--pk:#c2188a;--ok:#1f9d55;--bad:#d93a3a;--w:40px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1319;--card:#27191f;--ink:#f6e9f1;--mut:#b99bad;--pk:#ee4fb4;--ok:#45c27a;--bad:#ff6b6b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1b1319;--card:#27191f;--ink:#f6e9f1;--mut:#b99bad;--pk:#ee4fb4;--ok:#45c27a;--bad:#ff6b6b;color-scheme:dark}
+@media (max-width:480px){:root{--w:34px}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:16px}
+header{background:var(--card);border:2px solid var(--pk);border-radius:18px;padding:14px 16px}
+.brand{display:inline-block;background:var(--pk);color:#fff;font-weight:800;letter-spacing:.08em;font-size:.8rem;padding:4px 12px;border-radius:99px}
+h1{font-size:1.3rem;margin:10px 0 4px}
+.sub{color:var(--mut);font-size:.92rem;margin:0 0 12px}
+.fields{display:flex;gap:12px;flex-wrap:wrap}
+.fields label{display:flex;align-items:center;gap:6px;font-weight:600;flex:1 1 220px}
+.fields input{flex:1;min-width:0;font:inherit;color:var(--ink);background:transparent;border:0;border-bottom:2px solid var(--pk);padding:4px 2px;outline:0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+button{font:inherit;font-weight:700;border:2px solid var(--pk);background:var(--card);color:var(--pk);border-radius:12px;padding:9px 14px;cursor:pointer}
+button.on{background:var(--pk);color:#fff}
+button.sec{border-color:var(--mut);color:var(--mut)}
+#score{font-weight:800;margin:0 0 10px;min-height:1.4em}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:var(--card);border:2px solid var(--pk);border-radius:22px;padding:12px;position:relative;overflow-x:auto}
+.num{position:absolute;top:8px;left:12px;font-weight:800;color:var(--pk)}
+.mark{position:absolute;top:6px;right:12px;font-size:1.3rem}
+.sheet{width:max-content;margin:18px auto 0;padding-right:26px}
+.row{display:flex;gap:4px;margin:4px 0}
+.b{width:var(--w);height:var(--w);border:2px solid var(--pk);border-radius:4px;text-align:center;font:700 1.25rem system-ui,sans-serif;color:var(--ink);background:transparent;padding:0;outline:0}
+.b:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--pk) 35%,transparent)}
+.b:disabled{opacity:.25}
+.b.e{border-color:transparent;visibility:hidden}
+.b.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+.b.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,transparent)}
+.op{position:relative;display:grid;grid-template-columns:repeat(3,var(--w));margin:0 0 6px calc(var(--w)*3 + 12px);border:2px solid var(--pk)}
+.op i{font:normal 700 1.4rem/var(--w) system-ui,sans-serif;text-align:center;height:var(--w)}
+.op i:nth-child(-n+3){border-bottom:2px solid var(--pk)}
+.op i:not(:nth-child(3n)){border-right:2px solid var(--pk)}
+.op .x{position:absolute;left:100%;top:2px;margin-left:8px;font-size:1.6rem;color:var(--pk)}
+.ln{border-top:2px solid var(--pk);margin:8px 0}
+@media print{.no-print{display:none}body{background:#fff;color:#000}.card,header{break-inside:avoid}}
+</style></head>
+<body><div class="wrap">
+<header>
+  <span class="brand">CRED ÎN EDUCAȚIE</span>
+  <h1>Fișă de lucru – Înmulțirea cu numere de trei cifre</h1>
+  <p class="sub">Calculează cele trei produse parțiale, apoi rezultatul final. Scrie câte o cifră în fiecare căsuță.</p>
+  <div class="fields">
+    <label>Nume și prenume: <input id="nume" type="text" autocomplete="off"></label>
+    <label>Data: <input id="data" type="date"></label>
+  </div>
+</header>
+<div class="bar no-print">
+  <button data-m="fara">Fără trecere peste ordin</button>
+  <button data-m="cu">Cu trecere peste ordin</button>
+  <button data-m="mixt" class="on">Mixt</button>
+</div>
+<div class="bar no-print">
+  <button id="regen">🔄 Regenerează fișa</button>
+  <button id="chk">Verifică ✔</button>
+  <button id="sol" class="sec">Arată rezolvarea</button>
+  <button id="prt" class="sec">Tipărește</button>
+</div>
+<p id="score"></p>
+<div id="grid"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+let mode='mixt';
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const dg=n=>[n/100|0,(n/10|0)%10,n%10];
+function carry(a,b){
+  const A=dg(a),B=dg(b),col=[0,0,0,0,0];
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++){
+    const d=A[i]*B[j];
+    if(d>9)return true;
+    col[(2-i)+(2-j)]+=d;
+  }
+  return col.some(x=>x>9);
+}
+function num(m){return rnd(1,m)*100+rnd(1,m)*10+rnd(1,m)}
+function gen(){
+  const want=mode==='mixt'?null:mode==='cu';
+  const list=[],seen=new Set();
+  for(let k=0;k<10;k++){
+    const w=want===null?k%2===0:want;
+    for(let t=0;t<50000;t++){
+      const m=w?9:4,a=num(m),b=num(m);
+      if(seen.has(a+'x'+b)||carry(a,b)!==w)continue;
+      seen.add(a+'x'+b);list.push([a,b]);break;
+    }
+  }
+  if(mode==='mixt')list.sort(()=>Math.random()-.5);
+  return list;
+}
+function row(s,w,ans){
+  let h='<div class="row" data-ans="'+ans+'">';
+  for(let i=0;i<6;i++){
+    if(i<s||i>=s+w){h+='<span class="b e"></span>';continue}
+    const j=i-s,on=j>=w-ans.length;
+    h+='<input class="b" inputmode="numeric" maxlength="1"'+(on?'':' disabled')+'>';
+  }
+  return h+'</div>';
+}
+function render(){
+  const L=gen();
+  $('#grid').innerHTML=L.map(([a,b],i)=>{
+    const A=dg(a),B=dg(b);
+    return '<div class="card"><span class="num">'+(i+1)+')</span><span class="mark"></span><div class="sheet">'
+     +'<div class="op">'+A.concat(B).map(x=>'<i>'+x+'</i>').join('')+'<span class="x">×</span></div>'
+     +'<div class="ln"></div>'
+     +row(2,4,String(a*B[2]))+row(1,4,String(a*B[1]))+row(0,4,String(a*B[0]))
+     +'<div class="ln"></div>'+row(0,6,String(a*b))+'</div></div>';
+  }).join('');
+  $('#score').textContent='';
+  document.querySelectorAll('.card').forEach(wire);
+}
+function wire(card){
+  const order=[...card.querySelectorAll('.row')].flatMap(r=>[...r.querySelectorAll('input:not(:disabled)')].reverse());
+  order.forEach((el,i)=>{
+    el.addEventListener('input',()=>{
+      el.value=el.value.replace(/\D/g,'');
+      el.classList.remove('ok','bad');
+      if(el.value&&order[i+1])order[i+1].focus();
+    });
+    el.addEventListener('keydown',e=>{
+      if(e.key==='Backspace'&&!el.value&&order[i-1])order[i-1].focus();
+    });
+    el.addEventListener('focus',()=>el.select());
+  });
+}
+function check(){
+  let ok=0;
+  document.querySelectorAll('.card').forEach(c=>{
+    let all=true;
+    c.querySelectorAll('.row').forEach(r=>{
+      const ins=[...r.querySelectorAll('input:not(:disabled)')];
+      const got=ins.map(x=>x.value).join('');
+      const good=got===r.dataset.ans;
+      if(!good)all=false;
+      ins.forEach(x=>{x.classList.toggle('ok',good);x.classList.toggle('bad',!good&&x.value!=='')});
+    });
+    c.querySelector('.mark').textContent=all?'⭐':'';
+    if(all)ok++;
+  });
+  $('#score').textContent='Ai rezolvat corect '+ok+' din 10 exerciții'+(ok===10?' – Bravo! 🎉':'.');
+}
+function solve(){
+  document.querySelectorAll('.row').forEach(r=>{
+    const ins=[...r.querySelectorAll('input:not(:disabled)')],a=r.dataset.ans;
+    ins.forEach((x,i)=>x.value=a[i]);
+  });
+  check();
+}
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{
+  mode=b.dataset.m;
+  document.querySelectorAll('[data-m]').forEach(x=>x.classList.toggle('on',x===b));
+  render();
+});
+$('#regen').onclick=render;
+$('#chk').onclick=check;
+$('#sol').onclick=solve;
+$('#prt').onclick=()=>window.print();
+try{$('#data').valueAsDate=new Date()}catch(e){}
+render();
+</script></body></html>
